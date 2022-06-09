@@ -10,6 +10,7 @@
         walk = function(root, callback) {
             if (callback(root) === false) return
 
+            // Needed to activate wire: attributes in shadowRoot content
             if(root.shadowRoot){
                 let node = root.shadowRoot.firstElementChild
 
@@ -18,6 +19,16 @@
                     node = node.nextElementSibling
                 }
             }
+
+            // Needed to activate wire: attributes in template content
+            // if(root.content){
+            //     let node = root.content.firstElementChild
+
+            //     while (node) {
+            //         walk(node, callback)
+            //         node = node.nextElementSibling
+            //     }
+            // }
 
             let node = root.firstElementChild
 
@@ -53,38 +64,57 @@
             component.walk = overrideComponentWalk
         });
 
-        Livewire.hook('element.updating', (from, to) => {
-            if(typeof from.shadowRoot === 'undefined')
-                return;
+        Livewire.hook('element.initialized', (element, component) => {
+            // Make sure that when Livewire asks if two nodes are the same, we check a TEMPLATE's content
+            // TODO: This workaround alone does not fix template content not being updated.
+            walk(element, el => {
+                if (el.tagName === 'TEMPLATE') {
+                    el.isEqualNode = function(otherEl) {
+                        if(!otherEl.isEqualNode(el))
+                            return false;
 
-            from.shadowRoot.innerHTML = '';
-            const parentEl = from;
-
-            // TODO: Let livewire smart replace the shadowRoot children
-            // WORKAROUND: We're just replacing the whole content in the shadowRoot
-            let count = to.children.length;
-
-            for(let i = 0; i < count; i++){
-                let child = to.children[0]; // Pop from bottom of child stack
-
-                if(child.tagName === 'SCRIPT') {
-                    const script = document.createElement('script');
-                    script.innerHTML = child.innerHTML;
-
-                    to.removeChild(child);
-                    child = script;
+                        return otherEl.content.isEqualNode(el.content);
+                    }
                 }
+            });
+        });
 
-                parentEl.appendChild(child);
+        Livewire.hook('element.updating', (from, to) => {
+            // For whatever reason Livewire wont update my template contents
+            if (from.tagName === 'TEMPLATE') {
+                // Iterate from and to content and compare them
+                let fromContent = from.content
+                let toContent = to.content
+
+                let fromNode = fromContent.firstElementChild
+                let toNode = toContent.firstElementChild
+
+                while (fromNode && toNode) {
+                    if (!fromNode.isEqualNode(toNode)) {
+                        fromNode.innerHTML = toNode.innerHTML;
+                    }
+
+                    fromNode = fromNode.nextElementSibling
+                    toNode = toNode.nextElementSibling
+                }
             }
         });
 
-        Livewire.hook('element.updated', (from) => {
-            if(typeof from.shadowRoot === 'undefined')
+        Livewire.hook('element.updated', (from, component) => {
+            if(from.tagName !== 'SCRIPT')
                 return;
 
-            // Needed so events are attached to children with wire:click again
-            from.__livewire.initialize();
+            if(!from.hasAttribute('data-reexecute-on-livewire-update'))
+                return;
+
+            // Re-execute the script on changes to the script tag
+            const parentEl = from.parentElement;
+            const script = document.createElement('script');
+            // Copy the attributes of the existing script tag
+            [...from.attributes].forEach( attr => { script.setAttribute(attr.nodeName ,attr.nodeValue) })
+            script.innerHTML = from.innerHTML;
+
+            parentEl.replaceChild(script, from);
         });
     };
 

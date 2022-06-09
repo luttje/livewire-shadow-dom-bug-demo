@@ -24,49 +24,65 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Blade::directive('scope', function () {
+        // Used to generate a random id for reference later
+        $currentScriptId = 0;
+
+        Blade::directive('scope', function () use (&$currentScriptId) {
+            $currentScriptId++;
+
             return <<<SCRIPT_ECHO
             <div>
                 <?php
                 \$tagConfigs = [
-                    [
-                        'tag' => 'noscript'
-                    ],
+                    //[
+                    //   'tag' => 'noscript'
+                    //],
                     [
                         'tag' => 'template',
-                        'style' => 'display:none'
+                        'attributes' => [
+                            'style' => 'display:none',
+                            'id' => 'scoped-element-$currentScriptId',
+                        ]
                     ],
                 ];
-                foreach (\$tagConfigs as \$tagConfig) {
+                foreach (\$tagConfigs as \$k => \$tagConfig) {
                     extract(\$tagConfig);
 
-                    if(isset(\$style))
-                        echo "<\$tag style=\"\$style\">";
-                    else
-                        echo "<\$tag>";
+                    echo "<\$tag";
+
+                    if(isset(\$attributes)) {
+                        foreach (\$attributes as \$attribute => \$value) {
+                            echo " \$attribute=\"\$value\"";
+                        }
+                    }
+
+                    echo ">";
                 ?>
             SCRIPT_ECHO;
         });
-        Blade::directive('endscope', function () {
+        Blade::directive('endscope', function () use (&$currentScriptId) {
             return <<<SCRIPT_ECHO
                 <?php
                     echo "</\$tag>";
                 } ?>
 
-                <script>
-                (function(thisScript) {
-                    const templateEl = thisScript.previousElementSibling;
-                    const parentEl = templateEl.parentNode;
-                    const content = templateEl.content.cloneNode(true);
+                <script data-reexecute-on-livewire-update>
+                    (function(cacheBreaker) {
+                        const templateEl = document.getElementById('scoped-element-$currentScriptId');
+                        const parentEl = templateEl.parentNode;
+                        const content = templateEl.content.cloneNode(true);
 
-                    parentEl.innerHTML = '';
-                    const shadow = parentEl.shadowRoot || parentEl.attachShadow({ mode:"open" });
-                    shadow.append(content);
+                        const shadow = parentEl.shadowRoot || parentEl.attachShadow({ mode:"open" });
+                        shadow.innerHTML = '';
+                        shadow.append(content);
 
-                    document.addEventListener('alpine:init', () => {
-                        Alpine.initTree(shadow);
-                    });
-                })(document.currentScript);
+                        if(typeof Alpine !== 'undefined')
+                            Alpine.initTree(shadow);
+                        else
+                            document.addEventListener('alpine:init', () => {
+                                Alpine.initTree(shadow);
+                            });
+                    })(<?php echo time(); ?>);
                 </script>
             </div>
             SCRIPT_ECHO;
