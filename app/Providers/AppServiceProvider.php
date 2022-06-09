@@ -76,6 +76,12 @@ class AppServiceProvider extends ServiceProvider
                         shadow.innerHTML = '';
                         shadow.append(content);
 
+                        let comp = templateEl.closest('[wire\\\\3A id]');
+                        if(comp !== null && comp.__livewire !== undefined) {
+                            console.log(comp.__livewire);
+                            comp.__livewire.initialize();
+                        }
+
                         if(typeof Alpine !== 'undefined')
                             Alpine.initTree(shadow);
                         else
