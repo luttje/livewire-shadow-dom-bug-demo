@@ -86,7 +86,7 @@ class AppServiceProvider extends ServiceProvider
                             if(typeof shadow.childNodes[i] === 'undefined'){
                                 shadow.innerHTML += childNodes[i].outerHTML || childNodes[i].textContent;
                             } else if (!shadow.childNodes[i].isEqualNode(childNodes[i])) {
-                                shadow.childNodes[i].outerHTML = childNodes[i].outerHTML || childNodes[i].textContent;
+                                shadow.childNodes[i].innerHTML = childNodes[i].innerHTML || childNodes[i].textContent;
                             }
                         }
 
