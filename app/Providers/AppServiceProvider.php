@@ -66,28 +66,40 @@ class AppServiceProvider extends ServiceProvider
                     echo "</\$tag>";
                 } ?>
 
-                <script data-reexecute-on-livewire-update>
+                <script data-re-execute-on-livewire-update>
                     (function(cacheBreaker) {
+                        if(window.__isReExecutingScript){ // prevents recursion
+                            window.__isReExecutingScript = false;
+                            return;
+                        }
+
                         const templateEl = document.getElementById('scoped-element-$currentScriptId');
                         const parentEl = templateEl.parentNode;
                         const content = templateEl.content.cloneNode(true);
 
                         const shadow = parentEl.shadowRoot || parentEl.attachShadow({ mode:"open" });
-                        shadow.innerHTML = '';
-                        shadow.append(content);
 
-                        let comp = templateEl.closest('[wire\\\\3A id]');
-                        if(comp !== null && comp.__livewire !== undefined) {
-                            console.log(comp.__livewire);
-                            comp.__livewire.initialize();
+                        // Smart replace only the changed nodes
+                        var childNodes = content.childNodes;
+
+                        for (var i = 0, len = childNodes.length; i < len; i++) {
+                            if(typeof shadow.childNodes[i] === 'undefined'){
+                                shadow.innerHTML += childNodes[i].outerHTML || childNodes[i].textContent;
+                            } else if (!shadow.childNodes[i].isEqualNode(childNodes[i])) {
+                                shadow.childNodes[i].outerHTML = childNodes[i].outerHTML || childNodes[i].textContent;
+                            }
                         }
 
-                        if(typeof Alpine !== 'undefined')
+                        let component = templateEl.closest('[wire\\\\3A id]');
+                        if(component !== null && component.__livewire !== undefined) {
+                            component.__livewire.tearDown()
+                            window.__isReExecutingScript = true; // prevents recursion
+                            component.__livewire.initialize()
+                        }
+
+                        document.addEventListener('alpine:init', () => {
                             Alpine.initTree(shadow);
-                        else
-                            document.addEventListener('alpine:init', () => {
-                                Alpine.initTree(shadow);
-                            });
+                        });
                     })(<?php echo time(); ?>);
                 </script>
             </div>

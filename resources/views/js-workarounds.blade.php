@@ -20,16 +20,6 @@
                 }
             }
 
-            // Needed to activate wire: attributes in template content
-            // if(root.content){
-            //     let node = root.content.firstElementChild
-
-            //     while (node) {
-            //         walk(node, callback)
-            //         node = node.nextElementSibling
-            //     }
-            // }
-
             let node = root.firstElementChild
 
             while (node) {
@@ -66,7 +56,6 @@
 
         Livewire.hook('element.initialized', (element, component) => {
             // Make sure that when Livewire asks if two nodes are the same, we check a TEMPLATE's content
-            // TODO: This workaround alone does not fix template content not being updated.
             walk(element, el => {
                 if (el.tagName === 'TEMPLATE') {
                     el.isEqualNode = function(otherEl) {
@@ -104,7 +93,7 @@
             if(from.tagName !== 'SCRIPT')
                 return;
 
-            if(!from.hasAttribute('data-reexecute-on-livewire-update'))
+            if(!from.hasAttribute('data-re-execute-on-livewire-update'))
                 return;
 
             // Re-execute the script on changes to the script tag

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a43ab3ef7c1cff90319224abaad2140c",
+    "content-hash": "66f6bb465679927247e05aedd52b983b",
     "packages": [
         {
             "name": "brick/math",
@@ -1600,17 +1600,11 @@
         },
         {
             "name": "livewire/livewire",
-            "version": "v2.10.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/livewire/livewire.git",
-                "reference": "9ea6237760f627b3b6a05d15137880780ac843b5"
-            },
+            "version": "dev-master",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/livewire/livewire/zipball/9ea6237760f627b3b6a05d15137880780ac843b5",
-                "reference": "9ea6237760f627b3b6a05d15137880780ac843b5",
-                "shasum": ""
+                "type": "path",
+                "url": "../../../_ThirdParty/livewire",
+                "reference": "3ce704ac3314fc8713f710ee1c4e865846569c19"
             },
             "require": {
                 "illuminate/database": "^7.0|^8.0|^9.0",
@@ -1648,7 +1642,12 @@
                     "Livewire\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "App\\": "vendor/orchestra/testbench-core/laravel/app",
+                    "Tests\\": "tests/"
+                }
+            },
             "license": [
                 "MIT"
             ],
@@ -1659,17 +1658,9 @@
                 }
             ],
             "description": "A front-end framework for Laravel.",
-            "support": {
-                "issues": "https://github.com/livewire/livewire/issues",
-                "source": "https://github.com/livewire/livewire/tree/v2.10.5"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/livewire",
-                    "type": "github"
-                }
-            ],
-            "time": "2022-04-07T21:38:12+00:00"
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "monolog/monolog",
@@ -7821,7 +7812,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "livewire/livewire": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
