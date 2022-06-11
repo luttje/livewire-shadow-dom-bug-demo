@@ -9,6 +9,7 @@
 <p>
     These blue paragraphs and button live in a livewire component.
 </p>
+
 <div>
     <p>
         Clicking the button will increment this number: {{ $count }}
@@ -20,6 +21,10 @@
 </div>
 
 <script>
-    console.log(myValue);
+    // This is needed because calling a component's tearDown and initialize will re-execute scripts
+    if (!window.executedTestLivewireComponent) {
+        window.executedTestLivewireComponent = true;
+        console.log(myValue);
+    }
 </script>
 @endscope
