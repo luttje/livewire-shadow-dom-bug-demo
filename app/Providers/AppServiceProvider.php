@@ -75,6 +75,7 @@ class AppServiceProvider extends ServiceProvider
                         const shadow = parentEl.shadowRoot || parentEl.attachShadow({ mode:"open" });
 
                         // Smart replace only the changed nodes
+                        // TODO: This is where I would use the morphdom morphEl method to recursively check for changes and replace.
                         var childNodes = content.childNodes;
 
                         for (var i = 0, len = childNodes.length; i < len; i++) {
