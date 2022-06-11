@@ -54,41 +54,6 @@
             component.walk = overrideComponentWalk
         });
 
-        Livewire.hook('element.initialized', (element, component) => {
-            // Make sure that when Livewire asks if two nodes are the same, we check a TEMPLATE's content
-            walk(element, el => {
-                if (el.tagName === 'TEMPLATE') {
-                    el.isEqualNode = function(otherEl) {
-                        if(!otherEl.isEqualNode(el))
-                            return false;
-
-                        return otherEl.content.isEqualNode(el.content);
-                    }
-                }
-            });
-        });
-
-        Livewire.hook('element.updating', (from, to) => {
-            // For whatever reason Livewire wont update my template contents
-            if (from.tagName === 'TEMPLATE') {
-                // Iterate from and to content and compare them
-                let fromContent = from.content
-                let toContent = to.content
-
-                let fromNode = fromContent.firstElementChild
-                let toNode = toContent.firstElementChild
-
-                while (fromNode && toNode) {
-                    if (!fromNode.isEqualNode(toNode)) {
-                        fromNode.innerHTML = toNode.innerHTML;
-                    }
-
-                    fromNode = fromNode.nextElementSibling
-                    toNode = toNode.nextElementSibling
-                }
-            }
-        });
-
         Livewire.hook('element.updated', (from, component) => {
             if(from.tagName !== 'SCRIPT')
                 return;
