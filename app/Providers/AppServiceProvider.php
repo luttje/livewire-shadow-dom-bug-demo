@@ -68,11 +68,6 @@ class AppServiceProvider extends ServiceProvider
 
                 <script data-re-execute-on-livewire-update>
                     (function(cacheBreaker) {
-                        if(window.__isReExecutingScript){ // prevents recursion
-                            window.__isReExecutingScript = false;
-                            return;
-                        }
-
                         const templateEl = document.getElementById('scoped-element-$currentScriptId');
                         const parentEl = templateEl.parentNode;
                         const content = templateEl.content.cloneNode(true);
@@ -84,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
 
                         for (var i = 0, len = childNodes.length; i < len; i++) {
                             if(typeof shadow.childNodes[i] === 'undefined'){
-                                shadow.innerHTML += childNodes[i].outerHTML || childNodes[i].textContent;
+                                shadow.appendChild(childNodes[i].cloneNode(true));
                             } else if (!shadow.childNodes[i].isEqualNode(childNodes[i])) {
                                 // TODO: copy attributes
                                 if (shadow.childNodes[i].nodeType === Node.TEXT_NODE) {
@@ -97,9 +92,14 @@ class AppServiceProvider extends ServiceProvider
 
                         let component = templateEl.closest('[wire\\\\3A id]');
                         if(component !== null && component.__livewire !== undefined) {
-                            component.__livewire.tearDown()
-                            window.__isReExecutingScript = true; // prevents recursion
-                            component.__livewire.initialize()
+                            component.__livewire.tearDown();
+                            let originalRenderState = window.Livewire.components.initialRenderIsFinished;
+                            window.Livewire.components.initialRenderIsFinished = false // prevents re-execution of scripts
+                            component.__livewire.initialize();
+
+                            setTimeout(function(){
+                                window.Livewire.components.initialRenderIsFinished = originalRenderState;
+                            }, 0);
                         }
 
                         document.addEventListener('alpine:init', () => {

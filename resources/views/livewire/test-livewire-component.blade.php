@@ -21,10 +21,6 @@
 </div>
 
 <script>
-    // This is needed because calling a component's tearDown and initialize will re-execute scripts
-    if (!window.executedTestLivewireComponent) {
-        window.executedTestLivewireComponent = true;
-        console.log(myValue);
-    }
+    console.log(myValue);
 </script>
 @endscope
