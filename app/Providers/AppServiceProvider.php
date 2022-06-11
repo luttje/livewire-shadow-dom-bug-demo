@@ -74,22 +74,28 @@ class AppServiceProvider extends ServiceProvider
 
                         const shadow = parentEl.shadowRoot || parentEl.attachShadow({ mode:"open" });
 
-                        // Smart replace only the changed nodes
-                        // TODO: This is where I would use the morphdom morphEl method to recursively check for changes and replace.
-                        var childNodes = content.childNodes;
+                        // Smart replaces only the changed nodes
+                        const morphEl = function(fromEl, toEl) {
+                            var childNodes = toEl.childNodes;
 
-                        for (var i = 0, len = childNodes.length; i < len; i++) {
-                            if(typeof shadow.childNodes[i] === 'undefined'){
-                                shadow.appendChild(childNodes[i].cloneNode(true));
-                            } else if (!shadow.childNodes[i].isEqualNode(childNodes[i])) {
-                                // TODO: copy attributes
-                                if (shadow.childNodes[i].nodeType === Node.TEXT_NODE) {
-                                    shadow.childNodes[i].nodeValue = childNodes[i].nodeValue;
-                                } else {
-                                    shadow.childNodes[i].innerHTML = childNodes[i].innerHTML || childNodes[i].textContent;
+                            // TODO: copy attributes
+
+                            for (var i = 0, len = childNodes.length; i < len; i++) {
+                                if(typeof fromEl.childNodes[i] === 'undefined'){
+                                    fromEl.appendChild(childNodes[i].cloneNode(true));
+                                } else if (!fromEl.childNodes[i].isEqualNode(childNodes[i])) {
+                                    if (fromEl.childNodes[i].nodeType === Node.TEXT_NODE) {
+                                        fromEl.childNodes[i].nodeValue = childNodes[i].nodeValue;
+                                    } else if (toEl.childNodes[i].childNodes.length > 0) {
+                                        morphEl(fromEl.childNodes[i], childNodes[i]);
+                                    } else {
+                                        fromEl.childNodes[i].innerHTML = childNodes[i].innerHTML || childNodes[i].textContent;
+                                    }
                                 }
                             }
                         }
+
+                        morphEl(shadow, content);
 
                         let component = templateEl.closest('[wire\\\\3A id]');
                         if(component !== null && component.__livewire !== undefined) {
