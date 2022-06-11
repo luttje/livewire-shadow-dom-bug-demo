@@ -1,5 +1,6 @@
 <script>
     let initBugfix = () =>{
+        /// START OF WORKAROUND
         if(window.hasAppliedBugfix)
             return;
 
@@ -53,7 +54,9 @@
             // Override the walk method so it includes shadowRoot content
             component.walk = overrideComponentWalk
         });
+        /// END OF WORKAROUND
 
+        // Re-executes scripts on changes to the script tag (if they are marked data-re-execute-on-livewire-update)
         Livewire.hook('element.updated', (from, component) => {
             if(from.tagName !== 'SCRIPT')
                 return;
@@ -61,7 +64,6 @@
             if(!from.hasAttribute('data-re-execute-on-livewire-update'))
                 return;
 
-            // Re-execute the script on changes to the script tag
             const parentEl = from.parentElement;
             const script = document.createElement('script');
             // Copy the attributes of the existing script tag
